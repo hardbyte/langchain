@@ -42,11 +42,16 @@ class ChatAgent(Agent):
             return agent_scratchpad
 
     def _extract_tool_and_input(self, text: str) -> Optional[Tuple[str, str]]:
-        if FINAL_ANSWER_ACTION in text:
-            return "Final Answer", text.split(FINAL_ANSWER_ACTION)[-1].strip()
-        _, action, _ = text.split("```")
+        try:
+            if FINAL_ANSWER_ACTION in text:
+                return "Final Answer", text.split(FINAL_ANSWER_ACTION)[-1].strip()
+            _, action, _ = text.split("```")
 
-        response = json.loads(action.strip())
+            response = json.loads(action.strip())
+        except ValueError:
+            # There was no action and no correctly formatted final answer.
+            # Instead of raising, we return the output as the final answer verbatim
+            return "Final Answer", text.strip()
         return response["action"], response["action_input"]
 
     @property
